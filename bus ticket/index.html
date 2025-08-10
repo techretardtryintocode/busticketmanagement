@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftBus - Smart Bus Ticket Booking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">   
+<link rel="stylesheet" href="responsive.css"></head>
+<body>
+    <!-- Header/Navigation -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">SwiftBus</a>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#book">Book</a></li>
+                    <li><a href="#track">Track</a></li>
+                    <li><a href="#offers">Offers</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <div class="auth-buttons">
+                    <button id="loginBtn" class="btn btn-outline">Login</button>
+                    <button id="signupBtn" class="btn btn-primary">Sign Up</button>
+                </div>
+                <div class="hamburger">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Book Bus Tickets Anytime, Anywhere</h1>
+                <p>Find and book bus tickets across 1000+ routes with real-time tracking and updates.</p>
+                <a href="#book" class="btn btn-primary btn-lg">Book Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking Form -->
+    <section id="book" class="booking-form">
+        <div class="container">
+            <div class="form-container">
+                <h2>Search Buses</h2>
+                <form id="searchForm">
+                    <div class="form-group">
+                        <label for="from">From</label>
+                        <input type="text" id="from" placeholder="Departure City" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="to">To</label>
+                        <input type="text" id="to" placeholder="Arrival City" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Travel Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="passengers">Passengers</label>
+                        <select id="passengers">
+                            <option value="1">1 Passenger</option>
+                            <option value="2">2 Passengers</option>
+                            <option value="3">3 Passengers</option>
+                            <option value="4">4 Passengers</option>
+                            <option value="5">5 Passengers</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Search Buses</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Available Buses (Initially hidden) -->
+    <section id="availableBuses" class="available-buses" style="display: none;">
+        <div class="container">
+            <h2>Available Buses</h2>
+            <div class="sort-options">
+                <span>Sort by:</span>
+                <button class="btn btn-outline sort-btn" data-sort="departure">Departure Time</button>
+                <button class="btn btn-outline sort-btn" data-sort="arrival">Arrival Time</button>
+                <button class="btn btn-outline sort-btn" data-sort="price">Price</button>
+                <button class="btn btn-outline sort-btn" data-sort="rating">Rating</button>
+            </div>
+            <div id="busResults" class="bus-results">
+                <!-- Buses will be loaded here dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Bus Details Modal -->
+    <div id="busDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="busDetailsContent">
+                <!-- Bus details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Seat Selection Modal -->
+    <div id="seatSelectionModal" class="modal">
+        <div class="modal-content wide-modal">
+            <span class="close-modal">&times;</span>
+            <h2>Select Your Seats</h2>
+            <div class="seat-selection-container">
+                <div class="bus-layout">
+                    <div class="bus-driver">Driver</div>
+                    <div id="seatMap" class="seat-map">
+                        <!-- Seats will be generated here -->
+                    </div>
+                </div>
+                <div class="seat-info">
+                    <h3>Selected Seats</h3>
+                    <div id="selectedSeatsList"></div>
+                    <div class="price-summary">
+                        <p>Base Fare: <span id="baseFare">₹0</span></p>
+                        <p>Taxes: <span id="taxes">₹0</span></p>
+                        <p>Total: <span id="totalPrice">₹0</span></p>
+                    </div>
+                    <button id="proceedToPayment" class="btn btn-primary">Proceed to Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Payment</h2>
+            <div class="payment-options">
+                <div class="payment-tabs">
+                    <button class="tab-btn active" data-tab="card">Credit/Debit Card</button>
+                    <button class="tab-btn" data-tab="wallet">Wallet</button>
+                    <button class="tab-btn" data-tab="upi">UPI</button>
+                    <button class="tab-btn" data-tab="cash">Cash on Arrival</button>
+                </div>
+                
+                <div id="card" class="tab-content active">
+                    <form id="cardPaymentForm">
+                        <div class="form-group">
+                            <label for="cardNumber">Card Number</label>
+                            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cardName">Name on Card</label>
+                            <input type="text" id="cardName" placeholder="John Doe" required>
+                        </div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="expiryDate">Expiry Date</label>
+                                <input type="text" id="expiryDate" placeholder="MM/YY" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV</label>
+                                <input type="text" id="cvv" placeholder="123" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Pay Now</button>
+                    </form>
+                </div>
+                
+                <div id="wallet" class="tab-content">
+                    <div class="wallet-options">
+                        <div class="wallet-option">
+                            <input type="radio" id="paytm" name="wallet" value="paytm" checked>
+                            <label for="paytm">
+                                <img src="images/paytm.png" alt="Paytm">
+                                Paytm Wallet
+                            </label>
+                        </div>
+                        <div class="wallet-option">
+                            <input type="radio" id="phonepe" name="wallet" value="phonepe">
+                            <label for="phonepe">
+                                <img src="images/phonepe.png" alt="PhonePe">
+                                PhonePe
+                            </label>
+                        </div>
+                        <div class="wallet-option">
+                            <input type="radio" id="amazonpay" name="wallet" value="amazonpay">
+                            <label for="amazonpay">
+                                <img src="images/amazonpay.png" alt="Amazon Pay">
+                                Amazon Pay
+                            </label>
+                        </div>
+                    </div>
+                    <button id="payWithWallet" class="btn btn-primary btn-block">Pay with Wallet</button>
+                </div>
+                
+                <div id="upi" class="tab-content">
+                    <div class="upi-options">
+                        <div class="upi-option">
+                            <input type="radio" id="gpay" name="upi" value="gpay" checked>
+                            <label for="gpay">
+                                <img src="images/gpay.png" alt="Google Pay">
+                                Google Pay
+                            </label>
+                        </div>
+                        <div class="upi-option">
+                            <input type="radio" id="bhim" name="upi" value="bhim">
+                            <label for="bhim">
+                                <img src="images/bhim.png" alt="BHIM">
+                                BHIM UPI
+                            </label>
+                        </div>
+                        <div class="upi-option">
+                            <input type="radio" id="other" name="upi" value="other">
+                            <label for="other">
+                                <i class="fas fa-mobile-alt"></i>
+                                Other UPI Apps
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="upiId">UPI ID</label>
+                        <input type="text" id="upiId" placeholder="yourname@upi" required>
+                    </div>
+                    <button id="payWithUPI" class="btn btn-primary btn-block">Pay with UPI</button>
+                </div>
+                
+                <div id="cash" class="tab-content">
+                    <div class="cash-info">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <h3>Pay Cash When Boarding</h3>
+                        <p>You can pay the driver directly when boarding the bus. Please carry exact change.</p>
+                        <p>Your booking will be confirmed immediately.</p>
+                    </div>
+                    <button id="confirmCashPayment" class="btn btn-primary btn-block">Confirm Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="confirmation-content">
+                <div class="confirmation-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Booking Confirmed!</h2>
+                <div class="booking-details">
+                    <p><strong>Booking ID:</strong> <span id="bookingId">SWB12345678</span></p>
+                    <p><strong>Bus:</strong> <span id="confirmationBusName">Sharma Travels AC Sleeper</span></p>
+                    <p><strong>From:</strong> <span id="confirmationFrom">Mumbai</span> <strong>To:</strong> <span id="confirmationTo">Delhi</span></p>
+                    <p><strong>Departure:</strong> <span id="confirmationDeparture">15 Dec 2023, 22:30</span></p>
+                    <p><strong>Seats:</strong> <span id="confirmationSeats">A1, A2</span></p>
+                    <p><strong>Total Paid:</strong> <span id="confirmationAmount">₹2,400</span></p>
+                </div>
+                <div class="confirmation-actions">
+                    <button id="downloadTicket" class="btn btn-outline"><i class="fas fa-download"></i> Download Ticket</button>
+                    <button id="viewBooking" class="btn btn-primary">View Booking Details</button>
+                </div>
+                <div class="confirmation-note">
+                    <p>Your ticket has been sent to your email and mobile number. You can also find it in 'My Bookings' section.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Login to Your Account</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email or Phone</label>
+                    <input type="text" id="loginEmail" placeholder="Enter email or phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" required>
+                </div>
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe"> Remember me
+                    </label>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <div class="social-login">
+                <p>Or login with</p>
+                <div class="social-buttons">
+                    <button class="btn btn-social google">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+                    <button class="btn btn-social facebook">
+                        <i class="fab fa-facebook-f"></i> Facebook
+                    </button>
+                </div>
+            </div>
+            <div class="auth-switch">
+                Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Create Your Account</h2>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPhone">Phone Number</label>
+                    <input type="tel" id="signupPhone" placeholder="Enter your phone number" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <div class="form-group">
+                    <label class="terms-agree">
+                        <input type="checkbox" id="agreeTerms" required> I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+            </form>
+            <div class="social-login">
+                <p>Or sign up with</p>
+                <div class="social-buttons">
+                    <button class="btn btn-social google">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+                    <button class="btn btn-social facebook">
+                        <i class="fab fa-facebook-f"></i> Facebook
+                    </button>
+                </div>
+            </div>
+            <div class="auth-switch">
+                Already have an account? <a href="#" id="switchToLogin">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guest Checkout Modal -->
+    <div id="guestCheckoutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Continue as Guest</h2>
+            <form id="guestForm">
+                <div class="form-group">
+                    <label for="guestName">Full Name</label>
+                    <input type="text" id="guestName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="guestEmail">Email</label>
+                    <input type="email" id="guestEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="guestPhone">Phone Number</label>
+                    <input type="tel" id="guestPhone" placeholder="Enter your phone number" required>
+                </div>
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="guestCreateAccount"> Create an account for faster bookings next time
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Continue to Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Real-time Tracking Section -->
+    <section id="track" class="tracking-section">
+        <div class="container">
+            <h2>Real-time Bus Tracking</h2>
+            <div class="tracking-container">
+                <div class="tracking-form">
+                    <div class="form-group">
+                        <label for="trackBookingId">Booking ID or Mobile Number</label>
+                        <input type="text" id="trackBookingId" placeholder="Enter booking ID or mobile">
+                    </div>
+                    <button id="trackBusBtn" class="btn btn-primary">Track Bus</button>
+                </div>
+                <div id="trackingResult" class="tracking-result">
+                    <div class="tracking-info">
+                        <div class="bus-info">
+                            <h3 id="trackBusName">Sharma Travels AC Sleeper</h3>
+                            <p><strong>From:</strong> <span id="trackFrom">Mumbai</span> <strong>To:</strong> <span id="trackTo">Delhi</span></p>
+                            <p><strong>Departure:</strong> <span id="trackDeparture">15 Dec 2023, 22:30</span></p>
+                            <p><strong>Arrival:</strong> <span id="trackArrival">16 Dec 2023, 16:00</span></p>
+                        </div>
+                        <div class="bus-status">
+                            <div class="status-indicator">
+                                <div class="status-circle active"></div>
+                                <div class="status-line"></div>
+                                <div class="status-circle"></div>
+                                <div class="status-line"></div>
+                                <div class="status-circle"></div>
+                            </div>
+                            <div class="status-labels">
+                                <div class="status-label active">
+                                    <strong>Departed</strong>
+                                    <span>22:30</span>
+                                </div>
+                                <div class="status-label">
+                                    <strong>In Transit</strong>
+                                    <span>--:--</span>
+                                </div>
+                                <div class="status-label">
+                                    <strong>Arrived</strong>
+                                    <span>--:--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bus-location">
+                            <h4>Current Location</h4>
+                            <p id="currentLocation">Near Vashi Toll Plaza, Mumbai-Pune Expressway</p>
+                            <p id="nextStop">Next Stop: Lonavala (ETA: 00:45)</p>
+                        </div>
+                    </div>
+                    <div class="tracking-map">
+                        <div id="map" class="map-placeholder">
+                            <!-- Map would be integrated here -->
+                            <img src="images/map-placeholder.jpg" alt="Bus Route Map">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Dashboard (Hidden from main site) -->
+    <div id="adminDashboard" class="admin-dashboard" style="display: none;">
+        <div class="admin-sidebar">
+            <div class="admin-logo">SwiftBus Admin</div>
+            <ul class="admin-menu">
+                <li class="active"><a href="#dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#buses"><i class="fas fa-bus"></i> Buses</a></li>
+                <li><a href="#routes"><i class="fas fa-route"></i> Routes</a></li>
+                <li><a href="#schedules"><i class="fas fa-calendar-alt"></i> Schedules</a></li>
+                <li><a href="#bookings"><i class="fas fa-ticket-alt"></i> Bookings</a></li>
+                <li><a href="#payments"><i class="fas fa-money-bill-wave"></i> Payments</a></li>
+                <li><a href="#reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
+                <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+        </div>
+        <div class="admin-content">
+            <div class="admin-header">
+                <div class="admin-search">
+                    <input type="text" placeholder="Search...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="admin-user">
+                    <div class="user-avatar">
+                        <img src="images/admin-avatar.jpg" alt="Admin">
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">Admin User</span>
+                        <span class="user-role">Super Admin</span>
+                    </div>
+                    <div class="user-dropdown">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-main">
+                <h2>Dashboard Overview</h2>
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>1,245</h3>
+                            <p>Today's Bookings</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>₹2,45,678</h3>
+                            <p>Today's Revenue</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-bus"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>78</h3>
+                            <p>Active Buses</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-danger">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>3,456</h3>
+                            <p>New Users</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <div class="section-header">
+                        <h3>Recent Bookings</h3>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Booking ID</th>
+                                    <th>Customer</th>
+                                    <th>Bus</th>
+                                    <th>Route</th>
+                                    <th>Date</th>
+                                    <th>Seats</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>SWB12345678</td>
+                                    <td>Rahul Sharma</td>
+                                    <td>Sharma Travels AC</td>
+                                    <td>Mumbai to Delhi</td>
+                                    <td>15 Dec 2023</td>
+                                    <td>A1, A2</td>
+                                    <td>₹2,400</td>
+                                    <td><span class="status confirmed">Confirmed</span></td>
+                                    <td><button class="btn btn-sm btn-outline">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>SWB12345677</td>
+                                    <td>Priya Patel</td>
+                                    <td>Neeta Travels</td>
+                                    <td>Bangalore to Chennai</td>
+                                    <td>15 Dec 2023</td>
+                                    <td>B3, B4</td>
+                                    <td>₹1,800</td>
+                                    <td><span class="status pending">Pending</span></td>
+                                    <td><button class="btn btn-sm btn-outline">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>SWB12345676</td>
+                                    <td>Amit Singh</td>
+                                    <td>VRL Travels</td>
+                                    <td>Pune to Hyderabad</td>
+                                    <td>14 Dec 2023</td>
+                                    <td>C1, C2</td>
+                                    <td>₹2,200</td>
+                                    <td><span class="status cancelled">Cancelled</span></td>
+                                    <td><button class="btn btn-sm btn-outline">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>SWB12345675</td>
+                                    <td>Neha Gupta</td>
+                                    <td>Orange Travels</td>
+                                    <td>Delhi to Jaipur</td>
+                                    <td>14 Dec 2023</td>
+                                    <td>D1</td>
+                                    <td>₹1,200</td>
+                                    <td><span class="status confirmed">Confirmed</span></td>
+                                    <td><button class="btn btn-sm btn-outline">View</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <div class="section-header">
+                        <h3>Bus Schedule Management</h3>
+                        <button class="btn btn-primary btn-sm">Add New Schedule</button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Select Operator</label>
+                            <select>
+                                <option>All Operators</option>
+                                <option>Sharma Travels</option>
+                                <option>Neeta Travels</option>
+                                <option>VRL Travels</option>
+                                <option>Orange Travels</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Select Route</label>
+                            <select>
+                                <option>All Routes</option>
+                                <option>Mumbai - Delhi</option>
+                                <option>Bangalore - Chennai</option>
+                                <option>Pune - Hyderabad</option>
+                                <option>Delhi - Jaipur</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date Range</label>
+                            <input type="date">
+                            <span>to</span>
+                            <input type="date">
+                        </div>
+                        <button class="btn btn-outline">Filter</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Bus</th>
+                                    <th>Operator</th>
+                                    <th>Route</th>
+                                    <th>Departure</th>
+                                    <th>Arrival</th>
+                                    <th>Fare</th>
+                                    <th>Seats</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Sharma AC Sleeper</td>
+                                    <td>Sharma Travels</td>
+                                    <td>Mumbai - Delhi</td>
+                                    <td>15 Dec, 22:30</td>
+                                    <td>16 Dec, 16:00</td>
+                                    <td>₹1,200</td>
+                                    <td>32/36</td>
+                                    <td><span class="status active">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Neeta Multi Axle</td>
+                                    <td>Neeta Travels</td>
+                                    <td>Bangalore - Chennai</td>
+                                    <td>15 Dec, 23:00</td>
+                                    <td>16 Dec, 06:30</td>
+                                    <td>₹900</td>
+                                    <td>28/36</td>
+                                    <td><span class="status active">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>VRL Sleeper</td>
+                                    <td>VRL Travels</td>
+                                    <td>Pune - Hyderabad</td>
+                                    <td>14 Dec, 21:00</td>
+                                    <td>15 Dec, 08:00</td>
+                                    <td>₹1,100</td>
+                                    <td>36/36</td>
+                                    <td><span class="status inactive">Completed</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Orange AC Seater</td>
+                                    <td>Orange Travels</td>
+                                    <td>Delhi - Jaipur</td>
+                                    <td>14 Dec, 18:00</td>
+                                    <td>14 Dec, 23:30</td>
+                                    <td>₹1,200</td>
+                                    <td>12/36</td>
+                                    <td><span class="status active">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-sm btn-outline"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3>SwiftBus</h3>
+                    <p>Book bus tickets online across India with SwiftBus. We offer the easiest way to book bus tickets with real-time tracking and updates.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Book Tickets</a></li>
+                        <li><a href="#">Bus Tracking</a></li>
+                        <li><a href="#">Offers</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>Popular Routes</h3>
+                    <ul>
+                        <li><a href="#">Mumbai to Delhi</a></li>
+                        <li><a href="#">Bangalore to Chennai</a></li>
+                        <li><a href="#">Pune to Hyderabad</a></li>
+                        <li><a href="#">Delhi to Jaipur</a></li>
+                        <li><a href="#">Kolkata to Bhubaneswar</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>Contact Us</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Bus Street, Mumbai, India</li>
+                        <li><i class="fas fa-phone-alt"></i> +91 9876543210</li>
+                        <li><i class="fas fa-envelope"></i> support@swiftbus.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 SwiftBus. All Rights Reserved.</p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms & Conditions</a>
+                    <a href="#">FAQ</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/booking.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
